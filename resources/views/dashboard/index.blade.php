@@ -633,7 +633,7 @@
             printWindow.focus();
             setTimeout(() => {
                 printWindow.print();
-                printWindow.close();
+                printWindow.close(); // Add this line
             }, 500);
         }
     </script>
