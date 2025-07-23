@@ -116,6 +116,8 @@ Route::prefix('hasil-pembagian')->name('hasil.pembagian.')->group(function () {
 
     // Hapus siswa dari kelas berdasarkan ID detail (DELETE)
     Route::delete('/hapus-detail/{id}', [HasilPembagianKelasController::class, 'hapusSiswaDariKelas'])->name('hapusDetail');
+
+    Route::get('/modal/siswa', [HasilPembagianKelasController::class, 'loadSiswaModal'])->name('modal.siswa');
 });
 
 

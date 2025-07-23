@@ -155,6 +155,7 @@
                             <td class="border px-2">${siswa.nama}</td>
                         </tr>`;
                     });
+                    
                 })
                 .catch(err => {
                     console.error('Error loading siswa tanpa kelas:', err);
@@ -194,5 +195,36 @@
                     });
             }
         }
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // Filter modal DETAIL
+            $('#searchDetail').on('input', function() {
+                const keyword = $(this).val().toLowerCase();
+                $('#detailSiswaBody tr').each(function() {
+                    const nis = $(this).find('td').eq(0).text().toLowerCase();
+                    const nisn = $(this).find('td').eq(1).text().toLowerCase();
+                    const nama = $(this).find('td').eq(2).text().toLowerCase();
+                    $(this).toggle(nis.includes(keyword) || nisn.includes(keyword) || nama.includes(
+                        keyword));
+                });
+            });
+
+            // Filter modal TAMBAH
+            $('#searchTambah').on('input', function() {
+                const keyword = $(this).val().toLowerCase();
+                $('#tambahSiswaBody tr').each(function() {
+                    const nis = $(this).find('td').eq(1).text().toLowerCase();
+                    const nisn = $(this).find('td').eq(2).text().toLowerCase();
+                    const nama = $(this).find('td').eq(3).text().toLowerCase();
+                    $(this).toggle(nis.includes(keyword) || nisn.includes(keyword) || nama.includes(
+                        keyword));
+                });
+            });
+
+            // Fungsi Pagination
+            
+        });
     </script>
 @endsection

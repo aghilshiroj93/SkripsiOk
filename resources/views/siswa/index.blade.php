@@ -17,10 +17,10 @@
             <form id="searchForm" method="GET" class="flex gap-2">
                 <input type="text" id="searchInput" name="search" placeholder="Cari siswa..."
                     class="border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                <button type="submit"
+                {{-- <button type="submit"
                     class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200">
                     Cari
-                </button>
+                </button> --}}
             </form>
         </div>
 
@@ -103,6 +103,69 @@
             }
         });
     </script>
+
+    <script>
+        $(document).ready(function() {
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                fetchSiswaData(1);
+            });
+
+            $(document).on('click', '#paginationContainer a', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                const page = url.split('page=')[1];
+                fetchSiswaData(page);
+            });
+
+            // Tambahkan ini untuk pencarian otomatis saat mengetik
+            let typingTimer;
+            const delay = 200;
+            $('#searchInput').on('input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(function() {
+                    fetchSiswaData(1);
+                }, delay);
+            });
+
+            function fetchSiswaData(page) {
+                const search = $('#searchInput').val();
+
+                $.ajax({
+                    url: '{{ route('siswa.index') }}',
+                    type: 'GET',
+                    data: {
+                        search: search,
+                        page: page
+                    },
+                    beforeSend: function() {
+                        $('#loadingIndicator').show();
+                    },
+                    success: function(response) {
+                        $('#siswaTable').html(response.table);
+                        $('#paginationContainer').html(response.pagination);
+
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.set('search', search);
+                        newUrl.searchParams.set('page', page);
+                        window.history.pushState({}, '', newUrl);
+                    },
+                    complete: function() {
+                        $('#loadingIndicator').hide();
+                    },
+                    error: function(xhr) {
+                        console.error('Error:', xhr.responseText);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: 'Terjadi kesalahan saat memuat data.',
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+
 
     {{-- SweetAlert untuk Notifikasi Sukses --}}
     @if (session('success'))

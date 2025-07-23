@@ -51,8 +51,8 @@ class HasilPembagianKelasController extends Controller
         $siswaTanpaKelas = Siswa::whereDoesntHave('details', function ($q) use ($tahunAkademikId) {
             $q->where('tahun_akademik_id', $tahunAkademikId);
         })
-        ->whereDoesntHave('siswaTidakAktif') // ⬅️ Tambahkan ini
-        ->get();
+            ->whereDoesntHave('siswaTidakAktif') // ⬅️ Tambahkan ini
+            ->get();
 
         return response()->json($siswaTanpaKelas);
     }
@@ -78,6 +78,10 @@ class HasilPembagianKelasController extends Controller
             ]);
         }
 
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->route('hasil.pembagian.index', ['tahun_akademik_id' => $request->tahun_akademik_id])
             ->with('success', 'Siswa berhasil ditambahkan.');
     }
@@ -89,4 +93,6 @@ class HasilPembagianKelasController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    
 }

@@ -61,6 +61,10 @@
         }
     </style>
 </head>
+<!-- Global Loading Overlay -->
+<div id="globalLoading" class="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+</div>
 
 <body class="flex flex-col md:flex-row h-screen bg-gray-50">
     <!-- Mobile Header -->
@@ -503,6 +507,30 @@
         handleResize();
         window.addEventListener('resize', handleResize);
     </script>
+    <script>
+        // Tampilkan loading saat link diklik atau form disubmit
+        document.addEventListener('DOMContentLoaded', function() {
+            const loading = document.getElementById('globalLoading');
+
+            // Link (a) klik
+            document.querySelectorAll('a[href]').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    const href = el.getAttribute('href');
+                    if (href && !href.startsWith('#') && !el.hasAttribute('target')) {
+                        loading.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Form submit
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    loading.classList.remove('hidden');
+                });
+            });
+        });
+    </script>
+
 
     @yield('scripts')
 </body>
