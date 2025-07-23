@@ -1,4 +1,4 @@
-<div id="kelasModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+{{-- <div id="kelasModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
     <div class="bg-white p-6 rounded shadow-md w-full max-w-md relative">
         <h3 class="text-lg font-semibold mb-4">Form Kelas</h3>
         <form id="kelas-form" method="POST" action="{{ route('kelas.store') }}">
@@ -11,4 +11,4 @@
             </div>
         </form>
     </div>
-</div>
+</div> --}}

@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('guru', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->unique(); // relasi ke user
+            $table->unsignedBigInteger('user_id')->unique()->nullable(); // relasi ke user
             $table->string('nip')->unique();
             $table->string('nama');
             $table->enum('jenis_kelamin', ['L', 'P']);
             $table->string('alamat');
             $table->string('no_hp');
             $table->timestamps();
+            $table->softDeletes();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

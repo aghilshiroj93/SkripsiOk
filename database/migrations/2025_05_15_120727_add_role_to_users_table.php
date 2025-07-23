@@ -14,6 +14,7 @@ return new class extends Migration
         // Misalnya kamu pakai Laravel default
         Schema::table('users', function (Blueprint $table) {
             $table->string('role')->default('guru'); // atau 'admin'
+            $table->softDeletes();
         });
     }
 

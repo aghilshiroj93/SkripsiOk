@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('alamat');
             $table->string('no_hp', 15);
             $table->timestamps();
+            $table->softDeletes(); // Untuk mengaktifkan soft delete
         });
     }
 

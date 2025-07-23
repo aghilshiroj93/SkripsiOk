@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('semester', ['ganjil', 'genap']);
             $table->boolean('is_active')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

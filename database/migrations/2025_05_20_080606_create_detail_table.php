@@ -13,20 +13,20 @@ return new class extends Migration
     {
         Schema::create('detail', function (Blueprint $table) {
             $table->id('id_detail');
-           
-            $table->bigInteger('kelas_id')->unsigned();
-            $table->bigInteger('tahun_akademik_id')->unsigned();
-            $table->bigInteger('jurusan_id')->unsigned();
+
+            $table->bigInteger('kelas_id')->unsigned()->nullable();
+            $table->bigInteger('tahun_akademik_id')->unsigned()->nullable();
+            $table->bigInteger('jurusan_id')->unsigned()->nullable();
             $table->unsignedBigInteger('siswa_id')->nullable()->unsigned();
             $table->timestamps();
-            // $table->softDeletes();
+            $table->softDeletes();
 
             // Foreign key constraints
-          
-            $table->foreign('kelas_id')->references('id')->on('kelas')->onDelete('cascade');
-            $table->foreign('tahun_akademik_id')->references('id')->on('tahun_akademik')->onDelete('cascade');
-            $table->foreign('jurusan_id')->references('id')->on('jurusan')->onDelete('cascade');
-            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
+
+            $table->foreign('kelas_id')->references('id')->on('kelas')->onDelete('set null');
+            $table->foreign('tahun_akademik_id')->references('id')->on('tahun_akademik')->onDelete('set null');
+            $table->foreign('jurusan_id')->references('id')->on('jurusan')->onDelete('set null');
+            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('set null');
         });
     }
 

@@ -31,7 +31,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware('auth:siswa')->prefix('siswa')->group(function () {
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard_siswa.index');
     Route::get('/mapel', [SiswaDashboardController::class, 'mataPelajaran'])->name('dashboard_siswa.mapel');
-    Route::get('/profile', [SiswaDashboardController::class, 'profile'])->name('dashboard_siswa.profile');
+    // Route::get('/profile', [SiswaDashboardController::class, 'profile'])->name('dashboard_siswa.profile');
     Route::post('/update-password', [SiswaDashboardController::class, 'updatePassword'])->name('dashboard_siswa.updatePassword');
     Route::post('/siswa/ganti-password', [SiswaDashboardController::class, 'changePassword'])->name('dashboard_siswa.ganti_password');
     Route::get('/siswa/profile', [SiswaDashboardController::class, 'profile'])->name('dashboard_siswa.profile');
@@ -55,6 +55,8 @@ Route::middleware(['auth'])->group(function () {
     // Siswa CRUD
     Route::resource('siswa', SiswaController::class);
     Route::get('/siswa/ajax-search', [SiswaController::class, 'ajaxSearch'])->name('siswa.ajax.search');
+    Route::post('/siswa/{id}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.resetPassword');
+
 
 
     // Kelas & Jurusan (digabung dalam 1 tampilan index untuk efisiensi UI)

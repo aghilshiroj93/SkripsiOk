@@ -29,6 +29,7 @@ class CreateJadwalTable extends Migration
             $table->time('jam_selesai');
             $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

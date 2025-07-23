@@ -14,30 +14,30 @@ use Illuminate\Support\Facades\Http;
 
 class AbsensiController extends Controller
 {
-   public function index()
-{
-    $user = Auth::user();
+    public function index()
+    {
+        $user = Auth::user();
 
-    // Ambil tahun akademik aktif
-    $tahunAktif = TahunAkademik::where('is_active', true)->first();
 
-    if (!$tahunAktif) {
-        return back()->with('error', 'Tahun akademik aktif belum diatur.');
+        $tahunAktif = TahunAkademik::where('is_active', true)->first();
+
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tahun akademik aktif belum diatur.');
+        }
+
+
+        $jadwalQuery = Jadwal::with(['jurusan', 'kelas', 'guru'])
+            ->where('tahun_akademik_id', $tahunAktif->id);
+
+
+        if ($user->role === 'guru') {
+            $jadwalQuery->where('guru_id', $user->guru->id);
+        }
+
+        $jadwalList = $jadwalQuery->get();
+
+        return view('absensi.index', compact('jadwalList', 'tahunAktif'));
     }
-
-    // Query awal: hanya jadwal dari tahun akademik aktif
-    $jadwalQuery = Jadwal::with(['jurusan', 'kelas', 'guru'])
-        ->where('tahun_akademik_id', $tahunAktif->id);
-
-    // Jika bukan admin atau bk, filter berdasarkan guru yang login
-    if ($user->role === 'guru') {
-        $jadwalQuery->where('guru_id', $user->guru->id);
-    }
-
-    $jadwalList = $jadwalQuery->get();
-
-    return view('absensi.index', compact('jadwalList', 'tahunAktif'));
-}
 
 
     public function create(Jadwal $jadwal)

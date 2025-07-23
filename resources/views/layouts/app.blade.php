@@ -62,9 +62,51 @@
     </style>
 </head>
 <!-- Global Loading Overlay -->
-<div id="globalLoading" class="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50 hidden">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-</div>
+{{-- <div id="globalLoading" class="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="relative w-20 h-20">
+        <!-- 12 Dots -->
+        <div class="dot" style="--i: 0;"></div>
+        <div class="dot" style="--i: 1;"></div>
+        <div class="dot" style="--i: 2;"></div>
+        <div class="dot" style="--i: 3;"></div>
+        <div class="dot" style="--i: 4;"></div>
+        <div class="dot" style="--i: 5;"></div>
+        <div class="dot" style="--i: 6;"></div>
+        <div class="dot" style="--i: 7;"></div>
+        <div class="dot" style="--i: 8;"></div>
+        <div class="dot" style="--i: 9;"></div>
+        <div class="dot" style="--i: 10;"></div>
+        <div class="dot" style="--i: 11;"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-700 text-sm">loading...</div>
+    </div>
+</div> --}}
+
+<style>
+    .dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background-color: black;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: rotate(calc(var(--i) * 30deg)) translate(36px) rotate(calc(var(--i) * -30deg));
+        animation: spinFade 1.2s linear infinite;
+        animation-delay: calc(var(--i) * 0.1s);
+        opacity: 0.2;
+    }
+
+    @keyframes spinFade {
+        0% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.2;
+        }
+    }
+</style>
+
 
 <body class="flex flex-col md:flex-row h-screen bg-gray-50">
     <!-- Mobile Header -->
@@ -275,16 +317,7 @@
                         <span>Rekapitulasi</span>
                     </a>
                 </li>
-                {{-- <li>
-                    <a href="{{ url('/profile') }}"
-                        class="flex items-center gap-3 p-3 rounded-lg hover:bg-amber-50 hover:text-amber-600 text-gray-700 transition-all duration-200 group @if (Request::is('rekapitulasi*')) bg-amber-50 text-amber-600 active-menu @endif">
-                        <div
-                            class="bg-amber-100 text-amber-600 p-2 rounded-lg group-hover:bg-amber-200 transition-colors duration-200 @if (Request::is('rekapitulasi*')) bg-amber-200 @endif">
-                            <iconify-icon icon="mdi:chart-bar" width="20"></iconify-icon>
-                        </div>
-                        <span>Profile</span>
-                    </a>
-                </li> --}}
+
             </ul>
         </nav>
 
@@ -508,11 +541,10 @@
         window.addEventListener('resize', handleResize);
     </script>
     <script>
-        // Tampilkan loading saat link diklik atau form disubmit
         document.addEventListener('DOMContentLoaded', function() {
             const loading = document.getElementById('globalLoading');
 
-            // Link (a) klik
+            // Saat klik link
             document.querySelectorAll('a[href]').forEach(el => {
                 el.addEventListener('click', function(e) {
                     const href = el.getAttribute('href');
@@ -522,7 +554,7 @@
                 });
             });
 
-            // Form submit
+            // Saat form submit
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function() {
                     loading.classList.remove('hidden');
@@ -530,6 +562,7 @@
             });
         });
     </script>
+
 
 
     @yield('scripts')

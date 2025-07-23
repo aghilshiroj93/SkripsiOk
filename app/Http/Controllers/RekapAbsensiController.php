@@ -25,20 +25,25 @@ class RekapAbsensiController extends Controller
 
         $user = auth()->user();
 
-        // Jika role guru, ambil kelas yang diajar berdasarkan tabel Jadwal
         $kelasGuru = collect();
         if ($user->role === 'guru' && $user->guru) {
-
             $guruId = $user->guru->id;
             $kelasGuru = Jadwal::where('guru_id', $guruId)
                 ->pluck('kelas_id')
                 ->unique();
         }
 
-        // Proses jika tahun akademik dipilih
-        if ($request->filled('tahun_akademik_id')) {
+        // Ambil tahun akademik aktif sebagai default jika tidak ada filter
+        $tahunAktif = TahunAkademik::where('is_active', true)->first();
+        $tahunAkademikId = $request->input('tahun_akademik_id', $tahunAktif ? $tahunAktif->id : null);
+
+        // Jika ada tahun akademik (baik dari request atau default aktif)
+        if ($tahunAkademikId) {
+            // Set nilai tahun_akademik_id di request agar filter bekerja
+            $request->merge(['tahun_akademik_id' => $tahunAkademikId]);
+
             $query = Detail::with(['siswa', 'kelas', 'jurusan'])
-                ->where('tahun_akademik_id', $request->tahun_akademik_id);
+                ->where('tahun_akademik_id', $tahunAkademikId);
 
             // Filter hanya untuk guru jika ada
             if ($kelasGuru->isNotEmpty()) {
@@ -56,7 +61,7 @@ class RekapAbsensiController extends Controller
             }
 
             // Ambil daftar jurusan berdasarkan filter tahun akademik (dan kelas guru kalau ada)
-            $jurusanQuery = Detail::where('tahun_akademik_id', $request->tahun_akademik_id);
+            $jurusanQuery = Detail::where('tahun_akademik_id', $tahunAkademikId);
             if ($kelasGuru->isNotEmpty()) {
                 $jurusanQuery->whereIn('kelas_id', $kelasGuru);
             }
@@ -65,7 +70,7 @@ class RekapAbsensiController extends Controller
 
             // Ambil daftar kelas (jika jurusan dipilih)
             if ($request->filled('jurusan_id')) {
-                $kelasQuery = Detail::where('tahun_akademik_id', $request->tahun_akademik_id)
+                $kelasQuery = Detail::where('tahun_akademik_id', $tahunAkademikId)
                     ->where('jurusan_id', $request->jurusan_id);
                 if ($kelasGuru->isNotEmpty()) {
                     $kelasQuery->whereIn('kelas_id', $kelasGuru);
@@ -114,7 +119,8 @@ class RekapAbsensiController extends Controller
             'jurusanList',
             'kelasList',
             'rekap',
-            'request'
+            'request',
+            'tahunAktif'
         ));
     }
 

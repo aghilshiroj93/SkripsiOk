@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('siswa_id')->constrained('siswa')->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

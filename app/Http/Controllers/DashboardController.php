@@ -28,7 +28,6 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-
         $totalSiswa = Siswa::count();
         $totalSiswaTidakAktif = SiswaTidakAktif::count();
         $totalGuru = Guru::count();
@@ -41,33 +40,35 @@ class DashboardController extends Controller
         $kelasList = collect();
         $rekap = collect();
 
-        if (Auth::user()->role == 'admin') {
-            // Jangan proses jika tahun akademik belum dipilih
-            if ($request->filled('tahun_akademik_id')) {
-                // Ambil semua Detail sesuai Tahun Akademik
-                $query = Detail::with(['siswa', 'kelas', 'jurusan'])
-                    ->where('tahun_akademik_id', $request->tahun_akademik_id);
+        // Gunakan tahun aktif sebagai default jika tidak ada filter
+        $tahunAkademikId = $request->input('tahun_akademik_id', $tahunAktif ? $tahunAktif->id : null);
 
-                // Tambah filter jurusan jika ada
+        // Jika ada tahun akademik (baik dari request atau default aktif)
+        if ($tahunAkademikId) {
+            // Set nilai tahun_akademik_id di request agar filter bekerja
+            $request->merge(['tahun_akademik_id' => $tahunAkademikId]);
+
+            if (in_array(Auth::user()->role, ['admin', 'bk'])) {
+                // Proses yang sama seperti sebelumnya
+                $query = Detail::with(['siswa', 'kelas', 'jurusan'])
+                    ->where('tahun_akademik_id', $tahunAkademikId);
+
                 if ($request->filled('jurusan_id')) {
                     $query->where('jurusan_id', $request->jurusan_id);
-
-                    // Ambil kelas sesuai jurusan
                     $kelasList = $query->clone()->get()->pluck('kelas')->unique('id')->values();
                 }
 
-                // Tambah filter kelas jika ada
                 if ($request->filled('kelas_id')) {
                     $query->where('kelas_id', $request->kelas_id);
                 }
 
-                // Ambil jurusan yang tersedia dari data tersebut
-                $jurusanList = Detail::where('tahun_akademik_id', $request->tahun_akademik_id)
+                $jurusanList = Detail::where('tahun_akademik_id', $tahunAkademikId)
                     ->with('jurusan')
                     ->get()
                     ->pluck('jurusan')
                     ->unique('id')
                     ->values();
+
                 $siswaList = $query->get();
 
                 foreach ($siswaList as $detail) {
@@ -82,7 +83,11 @@ class DashboardController extends Controller
                         ]);
                     }
 
-                    // Group absensi by date
+                    // Tambahkan filter bulan jika ada
+                    if ($request->filled('bulan')) {
+                        $absensiQuery->whereMonth('waktu_absen', $request->bulan);
+                    }
+
                     $absensiPerTanggal = $absensiQuery->get()->groupBy(function ($item) {
                         return \Carbon\Carbon::parse($item->waktu_absen)->format('Y-m-d');
                     });
@@ -97,33 +102,29 @@ class DashboardController extends Controller
                             'alpa'  => $statusCount['A'] ?? 0,
                         ]);
                     }
-
-                    // Jangan proses jika tahun akademik belum dipilih
-
                 }
-            }
-        } else {
-            if ($request->filled('tahun_akademik_id')) {
-                // Ambil semua Detail sesuai Tahun Akademik
+            } else {
+                // Proses untuk role selain admin/bk
                 $query = Detail::with(['siswa', 'kelas', 'jurusan'])
-                    ->where('tahun_akademik_id', $request->tahun_akademik_id);
+                    ->where('tahun_akademik_id', $tahunAkademikId);
 
-                // Tambah filter jurusan jika ada
                 if ($request->filled('jurusan_id')) {
                     $query->where('jurusan_id', $request->jurusan_id);
-
-                    // Ambil kelas sesuai jurusan
-                    $kelasList = $this->jadwalModel->getKelasByTahunAkemikAndJurusanAndIdGuru($request->tahun_akademik_id, $request->jurusan_id, Auth::user()->guru->id);
-                    Log::debug("cek kelas", [$kelasList]);
+                    $kelasList = $this->jadwalModel->getKelasByTahunAkemikAndJurusanAndIdGuru(
+                        $tahunAkademikId,
+                        $request->jurusan_id,
+                        Auth::user()->guru->id
+                    );
                 }
 
-                // Tambah filter kelas jika ada
                 if ($request->filled('kelas_id')) {
                     $query->where('kelas_id', $request->kelas_id);
                 }
 
-                // Ambil jurusan yang tersedia dari data tersebut
-                $jurusanList = $this->jadwalModel->getJurusanByTahunAkademikAndIdGuru($request->tahun_akademik_id, Auth::user()->guru->id);
+                $jurusanList = $this->jadwalModel->getJurusanByTahunAkademikAndIdGuru(
+                    $tahunAkademikId,
+                    Auth::user()->guru->id
+                );
 
                 $siswaList = $query->get();
 
@@ -139,7 +140,11 @@ class DashboardController extends Controller
                         ]);
                     }
 
-                    // Group absensi by date
+                    // Tambahkan filter bulan jika ada
+                    if ($request->filled('bulan')) {
+                        $absensiQuery->whereMonth('waktu_absen', $request->bulan);
+                    }
+
                     $absensiPerTanggal = $absensiQuery->get()->groupBy(function ($item) {
                         return \Carbon\Carbon::parse($item->waktu_absen)->format('Y-m-d');
                     });
@@ -154,17 +159,9 @@ class DashboardController extends Controller
                             'alpa'  => $statusCount['A'] ?? 0,
                         ]);
                     }
-
-                    // Jangan proses jika tahun akademik belum dipilih
-
                 }
             }
         }
-
-        // $siswaList = $query->get();
-
-
-        // Log::debug("Cek user", [Auth::user()->role]);
 
         return view('dashboard.index', compact(
             'tahunAktif',

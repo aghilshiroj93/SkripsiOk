@@ -11,10 +11,10 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil keyword pencarian dari input
+
         $keyword = $request->input('search');
 
-        // Ambil data siswa dengan pencarian dan pagination
+
         $siswa = Siswa::when($keyword, function ($query, $keyword) {
             return $query->where('nis', 'like', "%{$keyword}%")
                 ->orWhere('nama', 'like', "%{$keyword}%");
@@ -22,7 +22,7 @@ class SiswaController extends Controller
             ->orderBy('nama')
             ->paginate(15);
 
-        // Jika permintaan adalah AJAX, kembalikan data dalam format JSON
+
         if ($request->ajax()) {
             return response()->json([
                 'table' => view('siswa.table', compact('siswa'))->render(),
@@ -30,7 +30,7 @@ class SiswaController extends Controller
             ]);
         }
 
-        // Jika bukan AJAX, kembalikan tampilan biasa
+
         return view('siswa.index', compact('siswa'));
     }
 
@@ -140,5 +140,17 @@ class SiswaController extends Controller
         } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
             abort(403, 'ID tidak valid');
         }
+    }
+
+    public function resetPassword($id)
+    {
+        $siswa = Siswa::findOrFail($id);
+
+        $siswa->update([
+            'password' => Hash::make($siswa->nis)
+        ]);
+        // dd('Password updated');
+
+        return redirect()->route('siswa.index')->with('success', 'Password berhasil direset ke NIS.');
     }
 }

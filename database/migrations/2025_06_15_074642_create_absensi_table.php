@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('status', ['H', 'I', 'S', 'A'])->default('A');
             $table->timestamp('waktu_absen')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

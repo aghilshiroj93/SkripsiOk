@@ -10,16 +10,17 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::whereIn('role', ['admin', 'bk'])->get();
         return view('user.index', compact('users'));
     }
+
 
     public function store(Request $request)
     {
         $request->validate([
             'name'     => 'required',
             'email'    => 'required|email|unique:users',
-            'role'     => 'required|in:admin,guru',
+            'role'     => 'required|in:admin,bk',
             'password' => 'required|min:6',
         ]);
 
@@ -38,7 +39,7 @@ class UserController extends Controller
         $request->validate([
             'name'  => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role'  => 'required|in:admin,guru',
+            'role'  => 'required|in:admin,bk',
         ]);
 
         $user->update([

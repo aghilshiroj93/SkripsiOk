@@ -27,6 +27,14 @@
                                 class="text-yellow-500 hover:text-yellow-700 transition-colors" title="Edit">
                                 <iconify-icon icon="mdi:pencil-outline" width="20"></iconify-icon>
                             </a>
+                            <form action="{{ route('siswa.resetPassword', $item->id) }}" method="POST"
+                                onsubmit="return confirm('Reset password?')">
+                                @csrf
+                                <button type="submit" class="text-indigo-500 hover:text-indigo-700"
+                                    title="Reset Password">
+                                    <iconify-icon icon="mdi:lock-reset" width="20"></iconify-icon>
+                                </button>
+                            </form>
                             <form action="{{ route('siswa.destroy', $item->id) }}" method="POST"
                                 class="inline delete-form">
                                 @csrf
