@@ -155,7 +155,7 @@
                             <td class="border px-2">${siswa.nama}</td>
                         </tr>`;
                     });
-                    
+
                 })
                 .catch(err => {
                     console.error('Error loading siswa tanpa kelas:', err);
@@ -224,7 +224,7 @@
             });
 
             // Fungsi Pagination
-            
+
         });
     </script>
 @endsection

@@ -6,6 +6,10 @@ use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Rap2hpoutre\FastExcel\FastExcel;
+
+
+use Illuminate\Support\Facades\Log;
 
 class SiswaController extends Controller
 {
@@ -36,6 +40,58 @@ class SiswaController extends Controller
 
 
 
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            $imported = 0;
+            $skipped = 0;
+
+            (new FastExcel)->import($request->file('file'), function ($row) use (&$imported, &$skipped) {
+                $nis = $row['nis'];
+                $nisn = $row['nisn'];
+
+                // Cek duplikat berdasarkan NIS atau NISN
+                $exists = \App\Models\Siswa::where('nis', $nis)->orWhere('nisn', $nisn)->exists();
+                if ($exists) {
+                    $skipped++;
+                    return;
+                }
+
+                \App\Models\Siswa::create([
+                    'nis' => $nis,
+                    'nisn' => $nisn,
+                    'nama' => $row['nama'],
+                    'jenis_kelamin' => $row['jenis_kelamin'],
+                    'tempat_lahir' => $row['tempat_lahir'],
+                    'tanggal_lahir' => $row['tanggal_lahir'],
+                    'alamat' => $row['alamat'],
+                    'no_hp' => preg_replace('/[^0-9]/', '', $row['no_hp']),
+                    'password' => Hash::make($nis),
+                ]);
+
+                $imported++;
+            });
+
+            $message = "✅ <b>Import selesai.</b><br>✔️ Berhasil: <b>$imported</b><br>⚠️ Duplikat dilewati: <b>$skipped</b>";
+            return redirect()->route('siswa.index')->with([
+                'import_success' => true,
+                'import_message' => $message
+            ]);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with([
+                'import_error' => true,
+                'import_message' => 'Gagal import: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+
+
     public function create()
     {
         return view('siswa.create');
@@ -44,8 +100,8 @@ class SiswaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nis' => 'required|unique:siswa',
-            'nisn' => 'required',
+            'nis' => 'required|unique:siswa,nis',
+            'nisn' => 'required|unique:siswa,nisn',
             'nama' => 'required',
             'jenis_kelamin' => 'required',
             'tempat_lahir' => 'required',
@@ -67,6 +123,7 @@ class SiswaController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'alamat' => $request->alamat,
             'no_hp' => $no_hp,
+            'password' => Hash::make($request->nis), // gunakan NIS sebagai password default
         ]);
         return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil ditambahkan.');
     }

@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('detail', function (Blueprint $table) {
             $table->id('id_detail');
 
-            $table->bigInteger('kelas_id')->unsigned()->nullable();
+            $table->unsignedBigInteger('kelas_id')->nullable();
+
             $table->bigInteger('tahun_akademik_id')->unsigned()->nullable();
             $table->bigInteger('jurusan_id')->unsigned()->nullable();
             $table->unsignedBigInteger('siswa_id')->nullable()->unsigned();

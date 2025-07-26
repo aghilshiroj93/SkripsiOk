@@ -3,13 +3,38 @@
 @section('content')
     <div class="container mx-auto px-4 py-6">
         {{-- Header --}}
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Data Siswa</h1>
-            <a href="{{ route('siswa.create') }}"
-                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
-                <iconify-icon icon="mdi:account-plus" width="18"></iconify-icon>
-                <span>Tambah Siswa</span>
-            </a>
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Data Siswa</h1>
+
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{{ route('siswa.create') }}"
+                        class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm">
+                        <iconify-icon icon="mdi:account-plus" width="18"></iconify-icon>
+                        <span>Tambah Siswa</span>
+                    </a>
+
+                    <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data"
+                        class="flex flex-col sm:flex-row gap-2">
+                        @csrf
+                        <div class="relative flex-grow">
+                            <label class="sr-only" for="file-upload">Import Excel</label>
+                            <input type="file" id="file-upload" name="file" required accept=".xlsx,.xls,.csv"
+                                class="block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-lg file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100 cursor-pointer">
+                        </div>
+                        <button type="submit"
+                            class="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm">
+                            <iconify-icon icon="mdi:upload" width="18"></iconify-icon>
+                            <span>Import</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         {{-- Form Pencarian --}}
@@ -194,6 +219,47 @@
             });
         </script>
     @endif
+
+    @if (session('import_success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Import Selesai',
+                html: `{!! session('import_message') !!}`,
+                confirmButtonText: 'OK'
+            });
+        </script>
+    @endif
+
+    @if (session('import_error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Import',
+                html: `{!! session('import_message') !!}`,
+                confirmButtonText: 'OK'
+            });
+        </script>
+    @endif
+    @if ($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let messages = '';
+                @foreach ($errors->all() as $error)
+                    messages += `- {{ $error }}<br>`;
+                @endforeach
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: messages,
+                    confirmButtonText: 'OK'
+                });
+            });
+        </script>
+    @endif
+
+
     {{-- SweetAlert2 untuk Konfirmasi Hapus --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {

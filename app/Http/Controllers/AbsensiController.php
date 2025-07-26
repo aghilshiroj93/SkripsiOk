@@ -96,53 +96,9 @@ class AbsensiController extends Controller
                 ]
             );
         }
-        // // Hanya kirim 
-        // $now = now();
-        // if ($now->format('H:i') >= '14:00') {
-        //     // $token = 'vdu6Te1psvaHjw5K8Jz3'; // <- Ganti ini dengan token asli kamu
-
-        //     foreach ($request->siswa_id as $index => $siswa_id) {
-        //         $siswa = \App\Models\Siswa::find($siswa_id);
-
-        //         if ($siswa && $siswa->no_hp) {
-        //             $kelas = \App\Models\Detail::where('siswa_id', $siswa->id)
-        //                 ->with(['kelas', 'jurusan'])
-        //                 ->latest()
-        //                 ->first();
-
-        //             $statusCode = $request->status[$index];
-        //             $statusMap = [
-        //                 'H' => 'Hadir',
-        //                 'S' => 'Sakit',
-        //                 'I' => 'Izin',
-        //                 'A' => 'Tidak Hadir',
-        //             ];
-        //             $status = $statusMap[$statusCode] ?? $statusCode;
-
-        //             $message = "Halo Orang Tua/Wali,\n"
-        //                 . "Absensi hari ini:\n"
-        //                 . "Nama: $siswa->nama\n"
-        //                 . "Kelas: " . ($kelas->kelas->nama_kelas ?? '-') . "\n"
-        //                 . "Jurusan: " . ($kelas->jurusan->nama ?? '-') . "\n"
-        //                 . "Status: $status";
-
-        //             // Kirim ke Fonnte
-        //             Http::withHeaders([
-        //                 'Authorization' => config('services.fonnte.api_key'),
-        //             ])->post('https://api.fonnte.com/send', [
-        //                 'target' => $siswa->no_hp,
-        //                 'message' => $message,
-        //                 'countryCode' => '62',
-        //             ]);
-        //         }
-        //     }
-        // }
-
 
         return redirect()->route('absensi.index')->with('success', 'Absensi berhasil disimpan.');
     }
-
-
 
 
     public function edit(Jadwal $jadwal)

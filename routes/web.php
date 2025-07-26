@@ -56,6 +56,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('siswa', SiswaController::class);
     Route::get('/siswa/ajax-search', [SiswaController::class, 'ajaxSearch'])->name('siswa.ajax.search');
     Route::post('/siswa/{id}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.resetPassword');
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+
+
 
 
 
@@ -115,6 +118,9 @@ Route::prefix('hasil-pembagian')->name('hasil.pembagian.')->group(function () {
 
     // Proses tambah siswa ke kelas (POST)
     Route::post('/tambah', [HasilPembagianKelasController::class, 'tambahSiswa'])->name('tambah');
+
+    Route::get('/form-tambah', [HasilPembagianKelasController::class, 'formTambah'])->name('formTambah');
+
 
     // Hapus siswa dari kelas berdasarkan ID detail (DELETE)
     Route::delete('/hapus-detail/{id}', [HasilPembagianKelasController::class, 'hapusSiswaDariKelas'])->name('hapusDetail');
