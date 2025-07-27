@@ -84,18 +84,33 @@ class AbsensiController extends Controller
         }
 
         foreach ($request->siswa_id as $index => $siswa_id) {
-            Absensi::updateOrCreate(
-                [
+            $absensi = Absensi::where('siswa_id', $siswa_id)
+                ->whereDate('waktu_absen', now())
+                ->orderByDesc('waktu_absen')
+                ->first();
+
+            if ($absensi) {
+                // Update absensi terakhir hari ini
+                $absensi->update([
                     'jadwal_id' => $jadwal->id,
-                    'siswa_id' => $siswa_id
-                ],
-                [
                     'guru_id' => auth()->user()->guru->id,
                     'status' => $request->status[$index],
                     'waktu_absen' => now()
-                ]
-            );
+                ]);
+            } else {
+                // Jika belum ada, buat baru
+                Absensi::create([
+                    'jadwal_id' => $jadwal->id,
+                    'siswa_id' => $siswa_id,
+                    'guru_id' => auth()->user()->guru->id,
+                    'status' => $request->status[$index],
+                    'waktu_absen' => now()
+                ]);
+            }
         }
+
+
+
 
         return redirect()->route('absensi.index')->with('success', 'Absensi berhasil disimpan.');
     }
@@ -145,10 +160,12 @@ class AbsensiController extends Controller
 
     public function sendNotificationForToday()
     {
-        $absensis = Absensi::with(['siswa'])
+        $absensis = Absensi::with(['siswa', 'jadwal'])
             ->whereDate('waktu_absen', now()->toDateString())
             ->where('notifikasi_terkirim', false)
-            ->get();
+            ->get()
+            ->groupBy(fn($absen) => $absen->siswa_id . '-' . $absen->jadwal->kelas_id)
+            ->map(fn($group) => $group->sortByDesc('waktu_absen')->first());
 
         if ($absensis->isEmpty()) {
             return back()->with([
@@ -158,18 +175,11 @@ class AbsensiController extends Controller
         }
 
         foreach ($absensis as $absen) {
-            $statusMap = [
-                'H' => 'Hadir',
-                'S' => 'Sakit',
-                'I' => 'Izin',
-                'A' => 'Tidak Hadir',
-            ];
-
+            $statusMap = ['H' => 'Hadir', 'S' => 'Sakit', 'I' => 'Izin', 'A' => 'Tidak Hadir'];
             $status = $statusMap[$absen->status] ?? $absen->status;
             $siswa = $absen->siswa;
 
             if ($siswa && $siswa->no_hp) {
-                // GUNAKAN DETAIL TERBARU DARI SISWA (bukan relasi dari absensi)
                 $detail = \App\Models\Detail::where('siswa_id', $siswa->id)
                     ->with(['kelas', 'jurusan'])
                     ->latest()
@@ -184,7 +194,7 @@ class AbsensiController extends Controller
                     . "Jurusan: {$jurusan}\n"
                     . "Status: {$status}";
 
-                $response = Http::withHeaders([
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
                     'Authorization' => config('services.fonnte.api_key'),
                 ])->post('https://api.fonnte.com/send', [
                     'target' => $siswa->no_hp,

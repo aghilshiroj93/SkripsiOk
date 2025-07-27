@@ -107,24 +107,14 @@ Route::delete('/siswa-tidak-aktif/{siswa_id}', [SiswaTidakAktifController::class
 
 
 Route::prefix('hasil-pembagian')->name('hasil.pembagian.')->group(function () {
-    // Halaman utama index
     Route::get('/', [HasilPembagianKelasController::class, 'index'])->name('index');
+    Route::get('/detail/{kelas_id}/{jurusan_id}/{tahun_akademik_id}', [HasilPembagianKelasController::class, 'detail'])->name('detail');
+    Route::get('/tambah/{kelas_id}/{jurusan_id}/{tahun_akademik_id}', [HasilPembagianKelasController::class, 'formTambah'])->name('formTambah');
+    Route::post('/simpan', [HasilPembagianKelasController::class, 'tambahSiswa'])->name('simpan');
 
-    // Ambil detail siswa berdasarkan kelas, jurusan, tahun akademik (AJAX)
-    Route::get('/get-detail', [HasilPembagianKelasController::class, 'getDetail'])->name('getDetail');
-
-    // Ambil siswa yang belum dibagi kelas (AJAX)
-    Route::get('/get-siswa-tanpa-kelas', [HasilPembagianKelasController::class, 'getSiswaTanpaKelas'])->name('getSiswaTanpaKelas');
-
-    // Proses tambah siswa ke kelas (POST)
-    Route::post('/tambah', [HasilPembagianKelasController::class, 'tambahSiswa'])->name('tambah');
-
-    Route::get('/form-tambah', [HasilPembagianKelasController::class, 'formTambah'])->name('formTambah');
-
-
-    // Hapus siswa dari kelas berdasarkan ID detail (DELETE)
     Route::delete('/hapus-detail/{id}', [HasilPembagianKelasController::class, 'hapusSiswaDariKelas'])->name('hapusDetail');
-
+    Route::get('/get-detail', [HasilPembagianKelasController::class, 'getDetail'])->name('getDetail');
+    Route::get('/get-siswa-tanpa-kelas', [HasilPembagianKelasController::class, 'getSiswaTanpaKelas'])->name('getSiswaTanpaKelas');
     Route::get('/modal/siswa', [HasilPembagianKelasController::class, 'loadSiswaModal'])->name('modal.siswa');
 });
 
@@ -144,9 +134,8 @@ Route::middleware(['auth'])->prefix('absensi')->group(function () {
 Route::get('/rekapabsensi', [RekapAbsensiController::class, 'index'])->name('rekapabsensi.index');
 Route::get('/rekap-absensi', [RekapAbsensiController::class, 'index'])->name('rekap.index');
 Route::post('/rekap-absensi/filter', [RekapAbsensiController::class, 'filter'])->name('rekap.filter');
-
-
-
-
+Route::get('/rekapabsensi/export-excel', [RekapAbsensiController::class, 'exportExcel'])->name('rekapabsensi.export.excel');
+Route::get('/rekapabsensi/export-pdf', [RekapAbsensiController::class, 'exportPdf'])->name('rekapabsensi.export.pdf');
+Route::post('/rekap-absensi/filter', [RekapAbsensiController::class, 'filter'])->name('rekap.filter');
 
 Route::middleware(['auth'])->group(function () {});

@@ -28,12 +28,7 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $totalSiswa = Siswa::count();
-        $totalSiswaTidakAktif = SiswaTidakAktif::count();
-        $totalGuru = Guru::count();
-        $totalKelas = Kelas::count();
-        $totalJurusan = Jurusan::count();
-        $totalMapel = MataPelajaran::count();
+        // Data umum untuk semua role
         $tahunAktif = TahunAkademik::where('is_active', true)->first();
         $tahunAkademikList = TahunAkademik::all();
         $jurusanList = collect();
@@ -43,13 +38,42 @@ class DashboardController extends Controller
         // Gunakan tahun aktif sebagai default jika tidak ada filter
         $tahunAkademikId = $request->input('tahun_akademik_id', $tahunAktif ? $tahunAktif->id : null);
 
+        // Data statistik berdasarkan role
+        if (Auth::user()->role == 'guru') {
+            // Statistik khusus guru
+            $guruId = Auth::user()->guru->id;
+
+            $stats = [
+                'totalJadwal' => Jadwal::where('guru_id', $guruId)->count(),
+                'totalKelas' => Jadwal::where('guru_id', $guruId)
+                    ->distinct('kelas_id')
+                    ->count('kelas_id'),
+                'totalJurusan' => Jadwal::where('guru_id', $guruId)
+                    ->distinct('jurusan_id')
+                    ->count('jurusan_id'),
+                'totalSiswa' => $this->getTotalSiswaByGuru($guruId, $tahunAkademikId),
+                'totalMapel' => Jadwal::where('guru_id', $guruId)
+                    ->distinct('mata_pelajaran_id')
+                    ->count('mata_pelajaran_id'),
+            ];
+        } else {
+            // Statistik untuk admin/bk
+            $stats = [
+                'totalSiswa' => Siswa::count(),
+                'totalSiswaTidakAktif' => SiswaTidakAktif::count(),
+                'totalGuru' => Guru::count(),
+                'totalKelas' => Kelas::count(),
+                'totalJurusan' => Jurusan::count(),
+                'totalMapel' => MataPelajaran::count(),
+            ];
+        }
+
         // Jika ada tahun akademik (baik dari request atau default aktif)
         if ($tahunAkademikId) {
-            // Set nilai tahun_akademik_id di request agar filter bekerja
             $request->merge(['tahun_akademik_id' => $tahunAkademikId]);
 
             if (in_array(Auth::user()->role, ['admin', 'bk'])) {
-                // Proses yang sama seperti sebelumnya
+                // Proses untuk admin/bk
                 $query = Detail::with(['siswa', 'kelas', 'jurusan'])
                     ->where('tahun_akademik_id', $tahunAkademikId);
 
@@ -71,40 +95,9 @@ class DashboardController extends Controller
 
                 $siswaList = $query->get();
 
-                foreach ($siswaList as $detail) {
-                    if (!$detail->siswa) continue;
-
-                    $absensiQuery = Absensi::where('siswa_id', $detail->siswa_id);
-
-                    if ($request->filled(['tanggal_mulai', 'tanggal_selesai'])) {
-                        $absensiQuery->whereBetween('waktu_absen', [
-                            $request->tanggal_mulai . ' 00:00:00',
-                            $request->tanggal_selesai . ' 23:59:59',
-                        ]);
-                    }
-
-                    // Tambahkan filter bulan jika ada
-                    if ($request->filled('bulan')) {
-                        $absensiQuery->whereMonth('waktu_absen', $request->bulan);
-                    }
-
-                    $absensiPerTanggal = $absensiQuery->get()->groupBy(function ($item) {
-                        return \Carbon\Carbon::parse($item->waktu_absen)->format('Y-m-d');
-                    });
-
-                    foreach ($absensiPerTanggal as $tanggal => $absensiData) {
-                        $statusCount = $absensiData->groupBy('status')->map->count();
-                        $rekap->push([
-                            'tanggal' => $tanggal,
-                            'hadir' => $statusCount['H'] ?? 0,
-                            'sakit' => $statusCount['S'] ?? 0,
-                            'izin'  => $statusCount['I'] ?? 0,
-                            'alpa'  => $statusCount['A'] ?? 0,
-                        ]);
-                    }
-                }
+                $rekap = $this->processAbsensiData($siswaList, $request);
             } else {
-                // Proses untuk role selain admin/bk
+                // Proses untuk guru
                 $query = Detail::with(['siswa', 'kelas', 'jurusan'])
                     ->where('tahun_akademik_id', $tahunAkademikId);
 
@@ -127,56 +120,78 @@ class DashboardController extends Controller
                 );
 
                 $siswaList = $query->get();
-
-                foreach ($siswaList as $detail) {
-                    if (!$detail->siswa) continue;
-
-                    $absensiQuery = Absensi::where('siswa_id', $detail->siswa_id);
-
-                    if ($request->filled(['tanggal_mulai', 'tanggal_selesai'])) {
-                        $absensiQuery->whereBetween('waktu_absen', [
-                            $request->tanggal_mulai . ' 00:00:00',
-                            $request->tanggal_selesai . ' 23:59:59',
-                        ]);
-                    }
-
-                    // Tambahkan filter bulan jika ada
-                    if ($request->filled('bulan')) {
-                        $absensiQuery->whereMonth('waktu_absen', $request->bulan);
-                    }
-
-                    $absensiPerTanggal = $absensiQuery->get()->groupBy(function ($item) {
-                        return \Carbon\Carbon::parse($item->waktu_absen)->format('Y-m-d');
-                    });
-
-                    foreach ($absensiPerTanggal as $tanggal => $absensiData) {
-                        $statusCount = $absensiData->groupBy('status')->map->count();
-                        $rekap->push([
-                            'tanggal' => $tanggal,
-                            'hadir' => $statusCount['H'] ?? 0,
-                            'sakit' => $statusCount['S'] ?? 0,
-                            'izin'  => $statusCount['I'] ?? 0,
-                            'alpa'  => $statusCount['A'] ?? 0,
-                        ]);
-                    }
-                }
+                $rekap = $this->processAbsensiData($siswaList, $request);
             }
         }
 
-        return view('dashboard.index', compact(
-            'tahunAktif',
-            'totalSiswa',
-            'totalSiswaTidakAktif',
-            'totalGuru',
-            'totalKelas',
-            'totalJurusan',
-            'totalMapel',
-            'tahunAkademikList',
-            'rekap',
-            'kelasList',
-            'jurusanList'
+        return view('dashboard.index', array_merge(
+            [
+                'tahunAktif' => $tahunAktif,
+                'tahunAkademikList' => $tahunAkademikList,
+                'rekap' => $rekap,
+                'kelasList' => $kelasList,
+                'jurusanList' => $jurusanList
+            ],
+            $stats
         ));
     }
+
+    protected function getTotalSiswaByGuru($guruId, $tahunAkademikId = null)
+    {
+        // Dapatkan ID kelas yang diajar oleh guru ini
+        $kelasIds = Jadwal::where('guru_id', $guruId)
+            ->when($tahunAkademikId, function ($q) use ($tahunAkademikId) {
+                $q->where('tahun_akademik_id', $tahunAkademikId);
+            })
+            ->pluck('kelas_id')
+            ->unique()
+            ->toArray();
+
+        // Hitung siswa yang memiliki detail dengan kelas_id tersebut
+        return Detail::whereIn('kelas_id', $kelasIds)
+            ->distinct('siswa_id')
+            ->count('siswa_id');
+    }
+
+    protected function processAbsensiData($siswaList, $request)
+    {
+        $rekap = collect();
+
+        foreach ($siswaList as $detail) {
+            if (!$detail->siswa) continue;
+
+            $absensiQuery = Absensi::where('siswa_id', $detail->siswa_id);
+
+            if ($request->filled(['tanggal_mulai', 'tanggal_selesai'])) {
+                $absensiQuery->whereBetween('waktu_absen', [
+                    $request->tanggal_mulai . ' 00:00:00',
+                    $request->tanggal_selesai . ' 23:59:59',
+                ]);
+            }
+
+            if ($request->filled('bulan')) {
+                $absensiQuery->whereMonth('waktu_absen', $request->bulan);
+            }
+
+            $absensiPerTanggal = $absensiQuery->get()->groupBy(function ($item) {
+                return \Carbon\Carbon::parse($item->waktu_absen)->format('Y-m-d');
+            });
+
+            foreach ($absensiPerTanggal as $tanggal => $absensiData) {
+                $statusCount = $absensiData->groupBy('status')->map->count();
+                $rekap->push([
+                    'tanggal' => $tanggal,
+                    'hadir' => $statusCount['H'] ?? 0,
+                    'sakit' => $statusCount['S'] ?? 0,
+                    'izin'  => $statusCount['I'] ?? 0,
+                    'alpa'  => $statusCount['A'] ?? 0,
+                ]);
+            }
+        }
+
+        return $rekap;
+    }
+
     public function filter(Request $request)
     {
         $query = Absensi::with('siswa');

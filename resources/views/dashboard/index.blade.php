@@ -9,33 +9,197 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            @foreach ([
-            ['title' => 'Siswa Aktif', 'value' => $totalSiswa ?? '-', 'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', 'color' => 'blue'],
-            ['title' => 'Siswa Tidak Aktif', 'value' => $totalSiswaTidakAktif ?? '-', 'icon' => 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z', 'color' => 'red'],
-            ['title' => 'Guru', 'value' => $totalGuru ?? '-', 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 'color' => 'purple'],
-            ['title' => 'Kelas', 'value' => $totalKelas ?? '-', 'icon' => 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', 'color' => 'green'],
-        ] as $card)
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <div class="flex items-center space-x-4">
-                        <div class="p-3 rounded-full bg-{{ $card['color'] }}-50 text-{{ $card['color'] }}-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="{{ $card['icon'] }}" />
-                            </svg>
+        @auth
+            @if (auth()->user()->role == 'guru')
+                <!-- Teacher Stats Section -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    @foreach ([
+                [
+                    'title' => 'Jadwal Mengajar',
+                    'value' => $totalJadwal ?? '0',
+                    'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                    'color' => 'blue',
+                    'tooltip' => 'Total jadwal mengajar Anda',
+                ],
+                [
+                    'title' => 'Kelas Diajar',
+                    'value' => $totalKelas ?? '0',
+                    'icon' => 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+                    'color' => 'green',
+                    'tooltip' => 'Jumlah kelas yang Anda ajar',
+                ],
+                [
+                    'title' => 'Jurusan Diajar',
+                    'value' => $totalJurusan ?? '0',
+                    'icon' => 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z',
+                    'color' => 'purple',
+                    'tooltip' => 'Jumlah jurusan yang Anda ajar',
+                ],
+                [
+                    'title' => 'Total Siswa',
+                    'value' => $totalSiswa ?? '0',
+                    'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                    'color' => 'yellow',
+                    'tooltip' => 'Total siswa di kelas yang Anda ajar',
+                ],
+            ] as $card)
+                        <!-- Stat Card -->
+                        <div
+                            class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative group">
+                            <!-- Card Content - Always Visible -->
+                            <div class="flex items-center space-x-4">
+                                <!-- Icon -->
+                                <div class="p-3 rounded-full bg-{{ $card['color'] }}-50 text-{{ $card['color'] }}-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $card['icon'] }}" />
+                                    </svg>
+                                </div>
+
+                                <!-- Text - Always Visible -->
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">{{ $card['title'] }}</p>
+                                    <p class="text-2xl font-bold text-{{ $card['color'] }}-600">{{ $card['value'] }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Tooltip - Only shows on hover -->
+                            <div
+                                class="hidden group-hover:block absolute z-10 w-48 px-2 py-1 text-sm text-white bg-gray-800 rounded shadow-lg bottom-full mb-2 left-1/2 transform -translate-x-1/2">
+                                {{ $card['tooltip'] }}
+                                <div
+                                    class="absolute w-3 h-3 -bottom-1 left-1/2 transform -translate-x-1/2 rotate-45 bg-gray-800">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">{{ $card['title'] }}</p>
-                            <p class="text-2xl font-bold text-{{ $card['color'] }}-600">{{ $card['value'] }}</p>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
+            @else
+                <!-- Tampilan Statistik untuk Admin/BK -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    @foreach ([
+                [
+                    'title' => 'Siswa Aktif',
+                    'value' => $totalSiswa ?? '0',
+                    'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                    'color' => 'blue',
+                    'tooltip' => 'Jumlah siswa aktif saat ini',
+                ],
+                [
+                    'title' => 'Siswa Tidak Aktif',
+                    'value' => $totalSiswaTidakAktif ?? '0',
+                    'icon' => 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
+                    'color' => 'red',
+                    'tooltip' => 'Jumlah siswa tidak aktif',
+                ],
+                [
+                    'title' => 'Guru',
+                    'value' => $totalGuru ?? '0',
+                    'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+                    'color' => 'purple',
+                    'tooltip' => 'Total guru terdaftar',
+                ],
+                [
+                    'title' => 'Kelas',
+                    'value' => $totalKelas ?? '0',
+                    'icon' => 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+                    'color' => 'green',
+                    'tooltip' => 'Jumlah kelas aktif',
+                ],
+            ] as $card)
+                        <div
+                            class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative group">
+                            <div class="flex items-center space-x-4">
+                                <div class="p-3 rounded-full bg-{{ $card['color'] }}-50 text-{{ $card['color'] }}-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $card['icon'] }}" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">{{ $card['title'] }}</p>
+                                    <p class="text-2xl font-bold text-{{ $card['color'] }}-600">{{ $card['value'] }}</p>
+                                </div>
+                            </div>
+                            @isset($card['tooltip'])
+                                <div
+                                    class="hidden group-hover:block absolute z-10 w-48 px-2 py-1 text-sm text-white bg-gray-800 rounded shadow-lg bottom-full mb-2 left-1/2 transform -translate-x-1/2">
+                                    {{ $card['tooltip'] }}
+                                    <div
+                                        class="absolute w-3 h-3 -bottom-1 left-1/2 transform -translate-x-1/2 rotate-45 bg-gray-800">
+                                    </div>
+                                </div>
+                            @endisset
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Secondary Stats for Admin/BK -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    @foreach ([
+                [
+                    'title' => 'Jurusan',
+                    'value' => $totalJurusan ?? '0',
+                    'icon' => 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z',
+                    'color' => 'yellow',
+                    'tooltip' => 'Total jurusan yang tersedia',
+                ],
+                [
+                    'title' => 'Mata Pelajaran',
+                    'value' => $totalMapel ?? '0',
+                    'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                    'color' => 'indigo',
+                    'tooltip' => 'Total mata pelajaran',
+                ],
+                [
+                    'title' => 'Tahun Akademik',
+                    'value' => $tahunAktif ? $tahunAktif->tahun . ' - ' . ucfirst($tahunAktif->semester) : '<span class="text-gray-400 italic">Belum aktif</span>',
+                    'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                    'color' => 'emerald',
+                    'tooltip' => 'Tahun akademik aktif saat ini',
+                    'html' => true,
+                ],
+            ] as $card)
+                        <div
+                            class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative group">
+                            <div class="flex items-center space-x-4">
+                                <div class="p-3 rounded-full bg-{{ $card['color'] }}-50 text-{{ $card['color'] }}-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="{{ $card['icon'] }}" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">{{ $card['title'] }}</p>
+                                    @if (isset($card['html']) && $card['html'])
+                                        <p class="text-xl font-semibold text-{{ $card['color'] }}-600">{!! $card['value'] !!}
+                                        </p>
+                                    @else
+                                        <p class="text-xl font-semibold text-{{ $card['color'] }}-600">{{ $card['value'] }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                            @isset($card['tooltip'])
+                                <div
+                                    class="hidden group-hover:block absolute z-10 w-48 px-2 py-1 text-sm text-white bg-gray-800 rounded shadow-lg bottom-full mb-2 left-1/2 transform -translate-x-1/2">
+                                    {{ $card['tooltip'] }}
+                                    <div
+                                        class="absolute w-3 h-3 -bottom-1 left-1/2 transform -translate-x-1/2 rotate-45 bg-gray-800">
+                                    </div>
+                                </div>
+                            @endisset
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        @endauth
 
         <!-- Secondary Stats -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {{-- <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             @foreach ([['title' => 'Jurusan', 'value' => $totalJurusan ?? '-', 'icon' => 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z', 'color' => 'yellow'], ['title' => 'Mata Pelajaran', 'value' => $totalMapel ?? '-', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'color' => 'indigo'], ['title' => 'Tahun Akademik Aktif', 'value' => $tahunAktif ? $tahunAktif->tahun . ' - ' . ucfirst($tahunAktif->semester) : '<span class="text-gray-400 italic">Belum aktif</span>', 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', 'color' => 'emerald']] as $card)
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div class="flex items-center space-x-4">
@@ -53,7 +217,7 @@
                     </div>
                 </div>
             @endforeach
-        </div>
+        </div> --}}
 
         <!-- Main Content Area -->
         <div class="flex flex-col lg:flex-row gap-6">
@@ -189,7 +353,8 @@
                                 <div class="bg-green-50 border border-green-100 rounded-lg p-4 shadow-sm">
                                     <div class="flex items-center">
                                         <div class="p-2 rounded-full bg-green-100 text-green-600 mr-3">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M5 13l4 4L19 7" />
                                             </svg>

@@ -67,17 +67,17 @@
                                     {{ $details->whereNotNull('siswa_id')->count() }}
                                 </td>
                                 <td class="border px-4 py-2 text-center space-x-2 whitespace-nowrap">
-                                    <button
-                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors"
-                                        onclick="openModalDetail({{ $firstDetail->kelas_id }}, {{ $firstDetail->jurusan_id }}, {{ $firstDetail->tahun_akademik_id }})">
+                                    <!-- Ganti button modal dengan link -->
+                                    <a href="{{ route('hasil.pembagian.detail', [$firstDetail->kelas_id, $firstDetail->jurusan_id, $firstDetail->tahun_akademik_id]) }}"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
                                         Detail
-                                    </button>
+                                    </a>
 
-                                    <button
-                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
-                                        onclick="openModalTambah({{ $firstDetail->kelas_id }}, {{ $firstDetail->jurusan_id }}, {{ $firstDetail->tahun_akademik_id }})">
+                                    <a href="{{ route('hasil.pembagian.formTambah', [$firstDetail->kelas_id, $firstDetail->jurusan_id, $firstDetail->tahun_akademik_id]) }}"
+                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
                                         Tambah Data
-                                    </button>
+                                    </a>
+
                                 </td>
                             </tr>
                         @endforeach
@@ -91,7 +91,7 @@
         @endif
     </div>
 
-    @include('hasil_pembagian_kelas.modal')
+    {{-- @include('hasil_pembagian_kelas.modal') --}}
 @endsection
 
 @section('scripts')

@@ -12,6 +12,8 @@ use App\Models\Kelas;
 use App\Models\TahunAkademik;
 use Carbon\Carbon;
 use DB;
+use Rap2hpoutre\FastExcel\FastExcel;
+use PDF;
 
 class RekapAbsensiController extends Controller
 {
@@ -182,5 +184,131 @@ class RekapAbsensiController extends Controller
         return response()->json([
             'data' => $rekap
         ]);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        // Get filtered data using the same logic as index
+        $rekap = $this->getFilteredData($request);
+
+        // Transform data for Excel export
+        $exportData = $rekap->map(function ($item) {
+            return [
+                'NIS' => $item['nis'],
+                'NISN' => $item['nisn'],
+                'Nama' => $item['nama'],
+                'Jurusan' => $item['jurusan'],
+                'Kelas' => $item['kelas'],
+                'Hadir' => $item['hadir'],
+                'Sakit' => $item['sakit'],
+                'Izin' => $item['izin'],
+                'Alpa' => $item['alpa'],
+                'Total' => $item['total']
+            ];
+        });
+
+        $filename = 'rekap-absensi-' . date('Y-m-d') . '.xlsx';
+
+        return (new FastExcel($exportData))->download($filename);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        // Get filtered data using the same logic as index
+        $rekap = $this->getFilteredData($request);
+
+        // Get additional data for PDF header
+        $tahunAktif = TahunAkademik::where('is_active', true)->first();
+        $jurusan = $request->jurusan_id ? Jurusan::find($request->jurusan_id)->nama : 'Semua Jurusan';
+        $kelas = $request->kelas_id ? Kelas::find($request->kelas_id)->nama_kelas : 'Semua Kelas';
+        $periode = $this->getPeriodeText($request);
+
+        $pdf = PDF::loadView('rekapabsensi.pdf', [
+            'rekap' => $rekap,
+            'tahunAktif' => $tahunAktif,
+            'jurusan' => $jurusan,
+            'kelas' => $kelas,
+            'periode' => $periode
+        ]);
+
+        return $pdf->download('rekap-absensi-' . date('Y-m-d') . '.pdf');
+    }
+
+    private function getFilteredData(Request $request)
+    {
+        // Reuse the same filtering logic from your index method
+        $rekap = collect();
+        $user = auth()->user();
+
+        $kelasGuru = collect();
+        if ($user->role === 'guru' && $user->guru) {
+            $kelasGuru = Jadwal::where('guru_id', $user->guru->id)
+                ->pluck('kelas_id')
+                ->unique();
+        }
+
+        $tahunAktif = TahunAkademik::where('is_active', true)->first();
+        $tahunAkademikId = $request->input('tahun_akademik_id', $tahunAktif ? $tahunAktif->id : null);
+
+        if ($tahunAkademikId) {
+            $query = Detail::with(['siswa', 'kelas', 'jurusan'])
+                ->where('tahun_akademik_id', $tahunAkademikId);
+
+            if ($kelasGuru->isNotEmpty()) {
+                $query->whereIn('kelas_id', $kelasGuru);
+            }
+
+            if ($request->filled('jurusan_id')) {
+                $query->where('jurusan_id', $request->jurusan_id);
+            }
+
+            if ($request->filled('kelas_id')) {
+                $query->where('kelas_id', $request->kelas_id);
+            }
+
+            $siswaList = $query->get();
+
+            foreach ($siswaList as $detail) {
+                if (!$detail->siswa) continue;
+
+                $absensiQuery = Absensi::where('siswa_id', $detail->siswa_id);
+
+                if ($request->filled(['tanggal_mulai', 'tanggal_selesai'])) {
+                    $absensiQuery->whereBetween('waktu_absen', [
+                        $request->tanggal_mulai . ' 00:00:00',
+                        $request->tanggal_selesai . ' 23:59:59',
+                    ]);
+                }
+
+                $absensiData = $absensiQuery->get()->groupBy('status')->map->count();
+                if ($absensiData->isEmpty()) {
+                    continue;
+                }
+
+                $rekap->push([
+                    'nis' => $detail->siswa->nis,
+                    'nisn' => $detail->siswa->nisn,
+                    'nama' => $detail->siswa->nama,
+                    'kelas' => $detail->kelas->nama_kelas,
+                    'jurusan' => $detail->jurusan->nama,
+                    'hadir' => $absensiData['H'] ?? 0,
+                    'sakit' => $absensiData['S'] ?? 0,
+                    'izin' => $absensiData['I'] ?? 0,
+                    'alpa' => $absensiData['A'] ?? 0,
+                    'total' => $absensiData->sum()
+                ]);
+            }
+        }
+
+        return $rekap;
+    }
+
+    private function getPeriodeText($request)
+    {
+        if ($request->tanggal_mulai && $request->tanggal_selesai) {
+            return Carbon::parse($request->tanggal_mulai)->format('d/m/Y') . ' - ' .
+                Carbon::parse($request->tanggal_selesai)->format('d/m/Y');
+        }
+        return 'Semua Periode';
     }
 }

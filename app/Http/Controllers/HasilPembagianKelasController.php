@@ -93,4 +93,31 @@ class HasilPembagianKelasController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+
+    // Tampilkan halaman detail
+    public function detail($kelas_id, $jurusan_id, $tahun_akademik_id)
+    {
+        $data = Detail::with('siswa', 'kelas', 'jurusan')
+            ->where('kelas_id', $kelas_id)
+            ->where('jurusan_id', $jurusan_id)
+            ->where('tahun_akademik_id', $tahun_akademik_id)
+            ->get();
+
+        return view('hasil_pembagian_kelas.detail', compact('data', 'kelas_id', 'jurusan_id', 'tahun_akademik_id'));
+    }
+
+    // Tampilkan halaman tambah siswa
+    public function formTambah(Request $request, $kelas_id, $jurusan_id, $tahun_akademik_id)
+    {
+        $siswaTanpaKelas = Siswa::whereDoesntHave('details', function ($q) use ($tahun_akademik_id) {
+            $q->where('tahun_akademik_id', $tahun_akademik_id);
+        })->whereDoesntHave('siswaTidakAktif')->paginate(10);
+
+        if ($request->ajax()) {
+            return view('hasil_pembagian_kelas.tambah', compact(...))->render();
+        }
+
+        return view('hasil_pembagian_kelas.tambah', compact('siswaTanpaKelas', 'kelas_id', 'jurusan_id', 'tahun_akademik_id'));
+    }
 }
