@@ -18,7 +18,7 @@
                 </tr>
             </thead>
             <tbody id="detailSiswaBody">
-                @forelse ($data as $item)
+                @forelse ($data->whereNotNull('siswa_id') as $item)
                     <tr data-id="{{ $item->id_detail }}">
                         <td class="border px-4 py-2">{{ $item->siswa?->nis ?? '-' }}</td>
                         <td class="border px-4 py-2">{{ $item->siswa?->nisn ?? '-' }}</td>
@@ -36,6 +36,7 @@
                     </tr>
                 @endforelse
             </tbody>
+
         </table>
 
         <!-- Kembali -->

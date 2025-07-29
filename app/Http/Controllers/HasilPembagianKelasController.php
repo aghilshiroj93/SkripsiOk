@@ -29,6 +29,7 @@ class HasilPembagianKelasController extends Controller
             });
         }
 
+
         return view('hasil_pembagian_kelas.index', compact('tahunAkademik', 'dataPembagianGrouped', 'selectedTahunAkademikId'));
     }
 
@@ -41,6 +42,7 @@ class HasilPembagianKelasController extends Controller
             ->whereNotNull('siswa_id')
             ->get();
 
+        return $siswa;
         return response()->json($siswa);
     }
 
@@ -104,6 +106,7 @@ class HasilPembagianKelasController extends Controller
             ->where('tahun_akademik_id', $tahun_akademik_id)
             ->get();
 
+        // return $data;
         return view('hasil_pembagian_kelas.detail', compact('data', 'kelas_id', 'jurusan_id', 'tahun_akademik_id'));
     }
 
