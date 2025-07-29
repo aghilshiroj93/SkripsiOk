@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
     {
         // ✅ Jalankan command absensi otomatis setiap hari jam 14:00
         $schedule->command('absensi:kirim-notifikasi')->dailyAt('16:00');
+
+        $schedule->command('notifikasi:alpha3')->dailyAt('16:00');
     }
 
     /**
@@ -25,4 +27,7 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+    protected $commands = [
+        \App\Console\Commands\KirimNotifikasiAlpha::class,
+    ];
 }
